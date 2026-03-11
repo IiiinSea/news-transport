@@ -528,47 +528,34 @@ async def main():
         f.write(html_content)
     print(f"✅ 本地副本已保存到: {output_file}")
     
-    # Step 6: 发送邮件
+    # Step 6: 发送邮件（强制发送，无需询问）
     if send_email_flag:
-        print("\n📤 Step 6/7: 正在发送邮件...")
+        print("\n📤 Step 6/6: 正在发送邮件...")
         success = send_email(html_content, keyword)
         if success:
-            print("\n✅ Step 7/7: 邮件发送成功！")
+            print("\n✅ Step 6/6: 邮件发送成功！")
             print(f"📧 已发送到: {CONFIG['smtp']['receiver_email']}")
-            
-            # 询问是否推送
-            print("\n❓ 是否需要将本次新闻简报推送到其他渠道？（Telegram/企业微信/其他）")
-            print("请回复 [是/否]")
-            # 等待用户输入（如果是交互式环境）
-            try:
-                response = input("> ").strip().lower()
-                if response in ['是', 'y', 'yes']:
-                    print("🔧 推送功能开发中，敬请期待...")
-                else:
-                    print("👌 已取消推送")
-            except:
-                # 非交互式环境跳过
-                pass
         else:
-            print("\n❌ Step 7/7: 邮件发送失败")
-            print("⚠️  新闻文件已保存到本地，是否需要重试？")
-            print("请回复 [重试/取消]")
-            try:
-                response = input("> ").strip().lower()
-                if response in ['重试', 'y', 'yes']:
-                    print("🔄 正在重试发送...")
-                    success = send_email(html_content, keyword)
-                    if success:
-                        print("✅ 重试发送成功！")
-                    else:
-                        print("❌ 重试失败，请检查配置")
-                else:
-                    print("👌 已取消重试")
-            except:
-                pass
+            print("\n❌ Step 6/6: 邮件发送失败")
+            print("🔄 正在自动重试发送...")
+            # 自动重试2次
+            retry_count = 0
+            max_retries = 2
+            while retry_count < max_retries and not success:
+                retry_count += 1
+                print(f"   重试 {retry_count}/{max_retries}...")
+                success = send_email(html_content, keyword)
+                if success:
+                    print("✅ 重试发送成功！")
+                    break
+            
+            if not success:
+                print("❌ 多次重试失败，请检查SMTP配置")
+                print("⚠️  新闻文件已保存到本地，可手动查看")
     else:
-        print("\n✅ Step 6/7: 已跳过邮件发送")
-        print("👌 所有操作完成！")
+        print("\n✅ Step 6/6: 已跳过邮件发送（--no-email 参数）")
+    
+    print("\n🎉 所有操作完成！")
     
     print("\n" + "=" * 80)
     print("🎉 流程执行结束")
