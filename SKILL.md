@@ -41,31 +41,6 @@ uv run {baseDir}/scripts/fetch_and_send_news.py "<关键词>"
 
 示例：`uv run {baseDir}/scripts/fetch_and_send_news.py "美伊局势 最新消息"`
 
-### 2. 只搜索新闻不发邮件
-```bash
-uv run {baseDir}/scripts/fetch_and_send_news.py "<关键词>" --no-email
-```
-仅搜索和汇总新闻，保存为本地HTML文件，不发送邮件。
-
-### 3. 简单新闻搜索
-```bash
-uv run {baseDir}/scripts/search_news.py "<关键词>"
-```
-快速搜索新闻，在命令行输出结果。
-
-示例：`uv run {baseDir}/scripts/search_news.py "美伊局势 最新消息"`
-
-### 4. 发送预设主题新闻邮件
-```bash
-uv run {baseDir}/scripts/send_news_email.py
-```
-自动抓取最新美伊相关新闻，生成简报并发送到配置的邮箱。
-
-### 5. 运行完整新闻采集系统
-```bash
-cd {baseDir}/news-transport && python main.py
-```
-启动完整的爬虫流程，定时抓取、处理、存储并分发新闻。
 
 ## 配置说明
 
