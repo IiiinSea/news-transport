@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+"""
+OpenClaw Skill 钩子 - 自动处理用户的新闻查询请求
+触发词：查找[xxx]新闻、搜索[xxx]新闻、给我[xxx]新闻、[xxx]新闻
+"""
+import sys
+import re
+import os
+import asyncio
+
+def main():
+    # 获取用户输入
+    user_input = sys.argv[1] if len(sys.argv) > 1 else ""
+    
+    # 匹配新闻查询模式
+    patterns = [
+        r'查找(.*?)新闻',
+        r'搜索(.*?)新闻',
+        r'给我(.*?)新闻',
+        r'帮我找(.*?)新闻',
+        r'(.*?)新闻',
+    ]
+    
+    keyword = None
+    for pattern in patterns:
+        match = re.search(pattern, user_input)
+        if match:
+            keyword = match.group(1).strip()
+            if keyword:
+                break
+    
+    if not keyword:
+        # 没有匹配到新闻查询，不处理
+        print("NO_REPLY")
+        return
+    
+    # 执行新闻搜索和发送流程
+    print(f"🔍 收到指令，正在为你搜索「{keyword}」相关新闻...")
+    print(f"📊 即将从多个平台搜集新闻，汇总后发送到你的邮箱，请稍候...")
+    
+    # 异步执行脚本
+    script_path = os.path.join(os.path.dirname(__file__), 'scripts', 'fetch_and_send_news.py')
+    
+    async def run():
+        process = await asyncio.create_subprocess_exec(
+            'uv', 'run', script_path, keyword,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await process.communicate()
+        
+        if process.returncode == 0:
+            print("\n✅ 操作完成！")
+            print("📧 新闻简报已发送到你的邮箱，请查收。")
+        else:
+            print(f"\n❌ 操作失败: {stderr.decode('utf-8', errors='ignore')}")
+    
+    asyncio.run(run())
+
+if __name__ == "__main__":
+    main()
