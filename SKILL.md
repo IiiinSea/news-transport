@@ -6,10 +6,14 @@ version: 1.0.0
 homepage: ""
 triggers:
   - "搜索新闻"
+  - "查找新闻"
   - "发新闻邮件"
   - "新闻简报"
   - "抓取新闻"
   - "美伊新闻"
+  - "搜集新闻"
+  - "汇总新闻"
+  - "发送新闻"
 metadata: {"clawdbot":{"emoji":"📰","requires":{"bins":["python3"]}}}
 ---
 
@@ -27,37 +31,63 @@ metadata: {"clawdbot":{"emoji":"📰","requires":{"bins":["python3"]}}}
 
 ## 快速使用
 
-### 1. 搜索新闻
+### 1. 智能新闻搜集+汇总+邮件发送（推荐）
+```bash
+uv run {baseDir}/scripts/fetch_and_send_news.py "<关键词>"
+```
+自动从百度、新浪、腾讯等多平台搜集新闻，AI汇总总结，生成精美HTML邮件并发送。
+
+示例：`uv run {baseDir}/scripts/fetch_and_send_news.py "美伊局势 最新消息"`
+
+### 2. 只搜索新闻不发邮件
+```bash
+uv run {baseDir}/scripts/fetch_and_send_news.py "<关键词>" --no-email
+```
+仅搜索和汇总新闻，保存为本地HTML文件，不发送邮件。
+
+### 3. 简单新闻搜索
 ```bash
 uv run {baseDir}/scripts/search_news.py "<关键词>"
 ```
+快速搜索新闻，在命令行输出结果。
+
 示例：`uv run {baseDir}/scripts/search_news.py "美伊局势 最新消息"`
 
-### 2. 发送新闻邮件
+### 4. 发送预设主题新闻邮件
 ```bash
 uv run {baseDir}/scripts/send_news_email.py
 ```
 自动抓取最新美伊相关新闻，生成简报并发送到配置的邮箱。
 
-### 3. 运行完整新闻采集系统
+### 5. 运行完整新闻采集系统
 ```bash
 cd {baseDir}/news-transport && python main.py
 ```
-启动完整的爬虫流程，抓取、处理、存储并分发新闻。
+启动完整的爬虫流程，定时抓取、处理、存储并分发新闻。
 
 ## 配置说明
 
 ### 邮件配置
-编辑 `{baseDir}/news-transport/.env` 文件或直接修改 `scripts/send_news_email.py` 中的 SMTP_CONFIG：
+#### 邮箱配置
+编辑 `scripts/fetch_and_send_news.py` 中的 CONFIG['smtp'] 部分：
 ```python
-SMTP_CONFIG = {
+'smtp': {
     'smtp_server': 'smtp.qq.com',
     'smtp_port': 465,
     'smtp_ssl': True,
     'sender_email': '你的发件邮箱@qq.com',
     'sender_password': '你的16位授权码',
     'receiver_email': '收件邮箱@example.com',
+    'subject_prefix': '【智能新闻简报】'
 }
+```
+支持所有SMTP邮箱：QQ邮箱、163邮箱、Gmail、企业邮箱等。
+#### 搜索配置
+可配置新闻源、搜索数量、摘要长度等参数：
+```python
+'max_news_per_source': 5,       # 每个新闻源最多取多少条
+'total_max_news': 15,            # 总共最多返回多少条
+'summary_length': 300,           # 摘要最大长度
 ```
 
 ### 关键词配置
