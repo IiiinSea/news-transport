@@ -493,40 +493,86 @@ async def main():
     keyword = sys.argv[1]
     send_email_flag = '--no-email' not in sys.argv
     
-    # 1. 搜集新闻
+    print("=" * 80)
+    print(f"🚀 开始执行新闻搜索流程，关键词: {keyword}")
+    print("=" * 80)
+    
+    # Step 1: 多平台并行搜索新闻
+    print("\n📊 Step 1/7: 正在从多个平台搜集新闻...")
     news_list = await fetch_all_news(keyword)
     
     if not news_list:
         print("\n❌ 没有找到任何相关新闻，请更换关键词后重试。")
         return
     
-    # 2. 生成汇总
-    print("\n📝 正在生成新闻汇总...")
+    # Step 2: 数据清洗与去重
+    print("\n🧹 Step 2/7: 正在进行数据清洗与去重...")
+    # 去重逻辑已经在fetch_all_news中实现
+    print(f"✅ 数据清洗完成，共获得 {len(news_list)} 条有效不重复新闻")
+    
+    # Step 3: 生成汇总报告
+    print("\n📝 Step 3/7: 正在生成新闻汇总报告...")
     summary = generate_summary(news_list, keyword)
     print("\n" + summary)
     
-    # 3. 生成HTML邮件
-    print("\n🎨 正在生成邮件内容...")
+    # Step 4: 生成HTML邮件内容
+    print("\n🎨 Step 4/7: 正在生成HTML邮件内容...")
     html_content = generate_html_email(news_list, keyword, summary)
     
-    # 4. 保存本地副本（可选）
+    # Step 5: 保存本地副本
+    print("\n💾 Step 5/7: 正在保存本地副本...")
     output_dir = os.path.join(os.path.dirname(__file__), '..', 'output')
     os.makedirs(output_dir, exist_ok=True)
     output_file = os.path.join(output_dir, f"news_{keyword.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.html")
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(html_content)
-    print(f"💾 新闻简报已保存到本地: {output_file}")
+    print(f"✅ 本地副本已保存到: {output_file}")
     
-    # 5. 发送邮件
+    # Step 6: 发送邮件
     if send_email_flag:
-        print("\n📤 正在发送邮件...")
+        print("\n📤 Step 6/7: 正在发送邮件...")
         success = send_email(html_content, keyword)
         if success:
-            print("\n🎉 所有操作完成！")
+            print("\n✅ Step 7/7: 邮件发送成功！")
+            print(f"📧 已发送到: {CONFIG['smtp']['receiver_email']}")
+            
+            # 询问是否推送
+            print("\n❓ 是否需要将本次新闻简报推送到其他渠道？（Telegram/企业微信/其他）")
+            print("请回复 [是/否]")
+            # 等待用户输入（如果是交互式环境）
+            try:
+                response = input("> ").strip().lower()
+                if response in ['是', 'y', 'yes']:
+                    print("🔧 推送功能开发中，敬请期待...")
+                else:
+                    print("👌 已取消推送")
+            except:
+                # 非交互式环境跳过
+                pass
         else:
-            print("\n⚠️  邮件发送失败，但新闻文件已保存到本地。")
+            print("\n❌ Step 7/7: 邮件发送失败")
+            print("⚠️  新闻文件已保存到本地，是否需要重试？")
+            print("请回复 [重试/取消]")
+            try:
+                response = input("> ").strip().lower()
+                if response in ['重试', 'y', 'yes']:
+                    print("🔄 正在重试发送...")
+                    success = send_email(html_content, keyword)
+                    if success:
+                        print("✅ 重试发送成功！")
+                    else:
+                        print("❌ 重试失败，请检查配置")
+                else:
+                    print("👌 已取消重试")
+            except:
+                pass
     else:
-        print("\n✅ 新闻搜索完成，已跳过邮件发送。")
+        print("\n✅ Step 6/7: 已跳过邮件发送")
+        print("👌 所有操作完成！")
+    
+    print("\n" + "=" * 80)
+    print("🎉 流程执行结束")
+    print("=" * 80)
 
 if __name__ == "__main__":
     asyncio.run(main())
